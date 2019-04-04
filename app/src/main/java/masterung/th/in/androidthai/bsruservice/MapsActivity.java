@@ -15,6 +15,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -26,6 +27,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private double myLat = 0, myLng = 0;
     private LocationManager locationManager;
     private Criteria criteria;
+    private int[] plateInts = {R.drawable.imos, R.drawable.iaaa, R.drawable.itong};
 
 
     @Override
@@ -145,5 +147,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng bsruLatLng = new LatLng(latBSRU = 13.733141,lngBSRU = 100.489417);
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(bsruLatLng, 16));
 
+        if (myLat !=0)  {
+            createMarker(myLat, myLng, plateInts[0]);
+        }
+
     }   // onMapReady
+
+    private void createMarker(double lat, double lng, int iconPlace) {
+
+        LatLng latLng = new LatLng(lat, lng);
+        MarkerOptions markerOptions = new MarkerOptions()
+                .position(latLng)
+                .icon(BitmapDescriptorFactory.fromResource(iconPlace));
+        mMap.addMarker(markerOptions);
+
+
+
+    }
 }
