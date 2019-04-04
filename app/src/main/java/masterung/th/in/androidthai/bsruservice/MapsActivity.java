@@ -1,7 +1,15 @@
 package masterung.th.in.androidthai.bsruservice;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -14,7 +22,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private GoogleMap mMap;
-    private  double latBSRU = 13.733141,lngBSRU = 100.489417;
+    private double latBSRU = 13.733141, lngBSRU = 100.489417;
+    private double myLat = 0, myLng = 0;
+    private LocationManager locationManager;
+    private Criteria criteria;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,18 +36,106 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //  Setup
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        criteria.setAltitudeRequired(false);
+        criteria.setBearingRequired(false);
+
+
+    }   // Main method
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //  for NetWork
+
+        Location netWorkLocation = findLocation(LocationManager.NETWORK_PROVIDER);
+        if (netWorkLocation != null) {
+            myLat = netWorkLocation.getLatitude();
+            myLng = netWorkLocation.getLongitude();
+
+        }
+
+        //  for GPS
+        Location gpsLocation = findLocation(LocationManager.GPS_PROVIDER);
+        if (gpsLocation != null) {
+            myLat = gpsLocation.getLatitude();
+            myLng = gpsLocation.getLongitude();
+
+        }
+
+        if (myLat == 0) {
+            onResume();
+        } else {
+            Log.d("4AprilV1", "Lat ==> " + myLat);
+            Log.d("4AprilV1", "Lng ==> " + myLng);
+
+        }
+
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        locationManager.removeUpdates(locationListener);
+    }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    public Location findLocation(String providerString) {
+
+        Location location = null;
+
+        if (locationManager.isProviderEnabled(providerString)) {
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return null;
+            }
+            locationManager.requestLocationUpdates(providerString, 1000, 10, locationListener);
+            location = locationManager.getLastKnownLocation(providerString);
+
+            }
+
+            return  location;
+
+        }
+
+        public LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+                myLat = location.getLatitude();
+                myLng = location.getLongitude();
+
+
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        } ;
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -45,5 +145,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng bsruLatLng = new LatLng(latBSRU = 13.733141,lngBSRU = 100.489417);
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(bsruLatLng, 16));
 
-    }
+    }   // onMapReady
 }
